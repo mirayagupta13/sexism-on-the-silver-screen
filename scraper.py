@@ -3,11 +3,9 @@ Authors: Jenna, Miraya, Jaci
 Title: Sexism on the Silver Screen
 """
 
-import requests
-from bs4 import BeautifulSoup
 import wikipedia
- 
 
+ 
 list_of_actors = [  ("Julie Andrews", 0),
 ( "Lauren Bacall", 0),
   ("Amitabh Bachchan", 1),
@@ -68,11 +66,8 @@ list_of_actors = [  ("Julie Andrews", 0),
  ("John Wayne", 1),
  ("Mae West", 0)]
 
-all_pages_text = []
+
 for actor in list_of_actors:
     page = wikipedia.page(actor[0], auto_suggest = False)
-    all_pages_text.append(page.text)
-
-#checking whether all pages were found
-print(len(all_pages_text))
-
+    with open(actor[0] + '.txt', 'x') as file:
+        file.write(page.content)
