@@ -7,7 +7,6 @@ import requests
 from bs4 import BeautifulSoup
 import wikipedia
  
-list_of_actors =
 all_pages_text = []
 for actor in list_of_actors:
     page = wikipedia.page(actor)
