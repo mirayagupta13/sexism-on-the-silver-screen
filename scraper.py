@@ -73,5 +73,6 @@ for actor in list_of_actors:
     page = wikipedia.page(actor[0], auto_suggest = False)
     all_pages_text.append(page.text)
 
+#checking whether all pages were found
 print(len(all_pages_text))
 
