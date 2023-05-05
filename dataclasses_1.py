@@ -89,6 +89,7 @@ for item in directory.iterdir():
             spacy_o = nlp(content)
             nltk_o = nltk.word_tokenize(content)
             actor_list.append(actor(a_name, a_gender, content, spacy_o, nltk_o))
+            #remove this after testing
             break
 
 print(actor_list[0].title)
