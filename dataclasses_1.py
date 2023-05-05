@@ -83,12 +83,13 @@ for item in directory.iterdir():
     if item.is_file():
         with item.open() as f:
             content = f.read()
-            index = all_actor_names.index(item.name[:len(item.name)-4])
-            a_name = all_actor_names[index]
-            a_gender = all_actor_names[index]
+            index_all_actor_names = all_actor_names.index(item.name[:len(item.name)-4])
+            a_name = all_actor_names[index_all_actor_names]
+            a_gender = a_list[index_all_actor_names]
             spacy_o = nlp(content)
             nltk_o = nltk.word_tokenize(content)
             actor_list.append(actor(a_name, a_gender, content, spacy_o, nltk_o))
             break
 
 print(actor_list[0].title)
+print(actor_list[0].gender)
