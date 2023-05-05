@@ -75,13 +75,19 @@ a_list = [("Julie Andrews", 0),
  ("John Wayne", 1),
  ("Mae West", 0)]
 
+all_actor_names = [a_tup[0] for a_tup in a_list]
+
 actor_list = []
 
-with open(directory):
-    for actor_person in a_list:
-        content = open(actor_person[0] + ".txt", "r")
-        spacy_o = nlp(content)
-        nltk_o = nltk.word_tokenize(content)
-        actor_list.append(actor(actor_person[0], actor_person[1], content, spacy_o, nltk_o))
+for item in directory.iterdir():
+    if item.is_file():
+        with item.open() as f:
+            content = f.read()
+            index = all_actor_names.index(item.name[:len(item.name)-4])
+            a_name = all_actor_names[index]
+            a_gender = all_actor_names[index]
+            spacy_o = nlp(content)
+            nltk_o = nltk.word_tokenize(content)
+            actor_list.append(actor(a_name, a_gender, content, spacy_o, nltk_o))
 
 print(actor_list[0].title)
