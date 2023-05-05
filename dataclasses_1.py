@@ -85,7 +85,7 @@ for item in directory.iterdir():
             content = f.read()
             index_all_actor_names = all_actor_names.index(item.name[:len(item.name)-4])
             a_name = all_actor_names[index_all_actor_names]
-            a_gender = a_list[index_all_actor_names]
+            a_gender = a_list[index_all_actor_names][1]
             spacy_o = nlp(content)
             nltk_o = nltk.word_tokenize(content)
             actor_list.append(actor(a_name, a_gender, content, spacy_o, nltk_o))
