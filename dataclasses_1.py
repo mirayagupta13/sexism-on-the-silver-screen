@@ -63,6 +63,14 @@ for item in directory.iterdir():
             a_name = all_actor_names[index_all_actor_names]
             a_gender = a_list[index_all_actor_names][1]
             spacy_o = nlp(content)
+            
+            #Filtering out stopwords
+            STOPWORDS = {'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', 'should', 'now'}
+
+            nltk_o = nltk.word_tokenize(content)
+            nltk_o = [word for word in nltk_o if word not in STOPWORDS]
+            
+            actor_list.append(actor(a_name, a_gender, content, spacy_o, nltk_o))
             nltk_o = nltk.word_tokenize(content)
             actor_list.append(actor(a_name, a_gender, content, spacy_o, nltk_o))
             #remove this after testing
@@ -87,3 +95,49 @@ for actor in actor_list:
 
 pp.pprint(female_scores)
 pp.pprint(male_scores)
+
+# GENSIM TOPIC ANALYSIS
+def gensim_topic_model():
+    from gensim import models, corpora
+    from nltk.stem.wordnet import WordNetLemmatizer
+    import time
+
+    topic_analysis_docs = [person.tokens for person in actor_list]
+
+    lemmatizer = WordNetLemmatizer()
+    def lemmatize_tokens(tokens): 
+        return [lemmatizer.lemmatize(token) for token in tokens]
+
+    texts = [lemmatize_tokens(tokens_lst) for tokens_lst in topic_analysis_docs]
+    dictionary = corpora.Dictionary(texts)
+    dictionary.filter_extremes(no_below=20, no_above=0.5)
+    corpus = [dictionary.doc2bow(text, allow_update=True) for text in texts]
+
+    print("Done preprocessing the text. Finding topics...")
+
+    # Set training parameters.
+    num_topics = 10
+    chunksize = 2000
+    
+    passes = 20
+    iterations = 400
+
+    start_time = time.perf_counter()
+    model = models.LdaModel(
+        corpus=corpus,
+        id2word=dictionary,
+        chunksize=chunksize,
+        alpha='auto',
+        eta='auto',
+        iterations=iterations,
+        num_topics=num_topics,
+        passes=passes,
+    )
+    end_time = time.perf_counter()
+
+    print(model.print_topics(10))
+    print(f"Took {end_time - start_time:0.2f} seconds")
+    
+#Testing topic modelling - prints out output
+gensim_topic_model()
+    
