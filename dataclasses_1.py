@@ -55,6 +55,7 @@ a_list = [("Julie Andrews", 0), ( "Lauren Bacall", 0), ("Amitabh Bachchan", 1),
 all_actor_names = [a_tup[0] for a_tup in a_list]
 actor_list = []
 
+i = 0
 for item in directory.iterdir():
     if item.is_file():
         with item.open(encoding="utf8") as f:
@@ -74,7 +75,9 @@ for item in directory.iterdir():
             nltk_o = nltk.word_tokenize(content)
             actor_list.append(actor(a_name, a_gender, content, spacy_o, nltk_o))
             #remove this after testing
-            break
+            i += 1
+            if i == 2:
+                break
 
 #test
 print(actor_list[0].title)
