@@ -5,6 +5,8 @@ from nltk.tokenize import sent_tokenize
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from pathlib import Path
 from pprint import PrettyPrinter
+from collections import Counter
+from math import log
 
 #loading file directory for scraped plain text of articles
 directory = Path(__file__).resolve().parent
@@ -71,15 +73,11 @@ for item in directory.iterdir():
 
             nltk_o = nltk.word_tokenize(content)
             nltk_o = [word for word in nltk_o if word.lower() not in STOPWORDS]
-
             nltk_o = [word for word in nltk_o if '=' not in word]
-            
-            actor_list.append(actor(a_name, a_gender, content, spacy_o, nltk_o))
-            nltk_o = nltk.word_tokenize(content)
             actor_list.append(actor(a_name, a_gender, content, spacy_o, nltk_o))
             #remove this after testing
             i += 1
-            if i == 2:
+            if i == 6:
                 break
 
 #test
@@ -158,12 +156,103 @@ def dependent_adjectives(actor_gender):
         if person.gender == actor_gender:
             adj = []
             for token in person.spacy_object:
-                if token.pos_ == 'ADJ' and token.head.ent_type_ == 'PERSON':
-                    if token.head.text in person.title:
-                        adj.append(token.text)         
-                        print(token.head.text)
-            adjectives[person.title] = adj  
+                if token.pos_ == 'ADJ':
+                    adj.append(token)         
+            adjectives[person.title] = adj 
     return adjectives
 
-pp.pprint(dependent_adjectives(0))
+female_adjectives = dependent_adjectives(0)
+male_adjectives = dependent_adjectives(1)
+
+female_adj_count = Counter(female_adjectives)
+male_adj_count = Counter(male_adjectives)
+
+#From lab1a
+all_spacy_docs = [person.spacy_object for person in actor_list]
+
+# 
+# def get_term_frequency(term, doc, adj_count):
+#     term = term.lower()
+#     # Compute the term count using document.token_counter
+#     term_count = adj_count[term]
+#     # Get the count of all of the tokens in the document
+#     token_count = len(doc.tokens)
+#     # Compute term frequency (see docstring)
+#     term_frequency = term_count/token_count
+# 
+#     return term_frequency
+# 
+# 
+# def get_inverse_document_frequency(term, corpus):
+#     term = term.lower()
+#     docs_containing_term_count = 0
+#     # Iterate through the docs and accumulate docs_containing_term_count
+#     for doc in corpus:
+#         if term in adj_list[term]: #term
+#             docs_containing_term_count += 1
+#     # Compute inverse document frequency (see docstring)
+#     inverse_document_frequency = log(len(corpus)/docs_containing_term_count)
+#     return inverse_document_frequency
+# 
+# def get_tfidf(term, document, corpus, adj_count):
+#     tfidf = get_inverse_document_frequency(term, corpus) * get_term_frequency(term, document, adj_count)
+#     return tfidf
+# 
+# def get_keywords(document, corpus, adj_list, adj_count, result_count=10):
+#     # Calculate tf-idf for all unique tokens (use document.token_set)
+#     all_token_tfidfs = []
+#     for token in adj_list:
+#         token_tuple = token, get_tfidf(token, document, corpus, adj_count)
+#         all_token_tfidfs.append(token_tuple)
+#     # sort all_token_tfidfs by tf-idf score
+#     # use sorted() or list.sort()
+#     all_token_tfidfs.sort(key = lambda x:x[1], reverse = True)
+#     # get just the top result_count entries from the list
+#     top_keywords = all_token_tfidfs[:result_count]
+#     return top_keywords
+
+def get_keywords_new(actor_adj_list, document, corpus, adj_count):
+    # Step 1: get the frequency of each adjective in its document
+    term_and_freq = {}
+    for term in actor_adj_list:
+        term_count = adj_count[term]
+        token_count = len(document) #len(document.tokens)
+        term_frequency = term_count/token_count
+        term_and_freq[term] = term_frequency
+    
+    # Step 2: get the frequency of the term in the corpus
+    docs_containing_term_count = 0
+    # Iterate through the docs and accumulate docs_containing_term_count
+    term_and_idf = {}
+    for word in actor_adj_list:
+        for doc in corpus:
+            if word in doc: #doc.tokens 
+                docs_containing_term_count += 1
+        # Compute inverse document frequency
+        inverse_document_frequency = log(len(corpus)/docs_containing_term_count)
+        term_and_idf[word] = inverse_document_frequency
+    
+    # Step 3: compute tfidf
+    term_and_tfidf = {}
+    for adj in actor_adj_list:
+        tfidf =  term_and_idf[adj] * term_and_freq[adj]
+        term_and_tfidf[adj] = tfidf
+        
+    return term_and_tfidf
+
+    
+female_adj_tfidf = {}
+for person in actor_list:
+    if person.gender == 0:
+        actor_adj_list = female_adjectives[person.title]
+        counter = Counter(actor_adj_list)
+        keywords = get_keywords_new(actor_adj_list, person.spacy_object, all_spacy_docs, counter)
+        # Sorting the dictionary based on highest to lowest tfidf values
+        sorted_keywords = sorted(keywords.items(), key=lambda x: x[1], reverse=True)
+        female_adj_tfidf[person.title] = sorted_keywords
+        break
+
+print(female_adj_tfidf)
+        
+
 
