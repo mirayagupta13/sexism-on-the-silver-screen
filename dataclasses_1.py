@@ -97,12 +97,12 @@ pp.pprint(female_scores)
 pp.pprint(male_scores)
 
 # GENSIM TOPIC ANALYSIS
-def gensim_topic_model():
+def gensim_topic_model(actor_gender):
     from gensim import models, corpora
     from nltk.stem.wordnet import WordNetLemmatizer
     import time
 
-    topic_analysis_docs = [person.tokens for person in actor_list]
+    topic_analysis_docs = [person.tokens for person in actor_list if person.gender == actor_gender]
 
     lemmatizer = WordNetLemmatizer()
     def lemmatize_tokens(tokens): 
@@ -139,5 +139,8 @@ def gensim_topic_model():
     print(f"Took {end_time - start_time:0.2f} seconds")
     
 #Testing topic modelling - prints out output
-gensim_topic_model()
+print('Female actors')
+gensim_topic_model(0)
+print('Male actors')
+gensim_topic_model(1)
     
