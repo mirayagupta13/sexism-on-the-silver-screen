@@ -77,7 +77,7 @@ for item in directory.iterdir():
             actor_list.append(actor(a_name, a_gender, content, spacy_o, nltk_o))
             #remove this after testing
             i += 1
-            if i == 6:
+            if i == 10:
                 break
 
 #test
@@ -100,53 +100,53 @@ print(actor_list[0].gender)
 # pp.pprint(female_scores)
 # pp.pprint(male_scores)
 
-# # GENSIM TOPIC ANALYSIS
-# def gensim_topic_model(actor_gender):
-#     from gensim import models, corpora
-#     from nltk.stem.wordnet import WordNetLemmatizer
-#     import time
+#GENSIM TOPIC ANALYSIS
+def gensim_topic_model(actor_gender):
+    from gensim import models, corpora
+    from nltk.stem.wordnet import WordNetLemmatizer
+    import time
 
-#     topic_analysis_docs = [person.tokens for person in actor_list if person.gender == actor_gender]
+    topic_analysis_docs = [person.tokens for person in actor_list if person.gender == actor_gender]
 
-#     lemmatizer = WordNetLemmatizer()
-#     def lemmatize_tokens(tokens): 
-#         return [lemmatizer.lemmatize(token) for token in tokens]
+    lemmatizer = WordNetLemmatizer()
+    def lemmatize_tokens(tokens): 
+        return [lemmatizer.lemmatize(token) for token in tokens]
 
-#     texts = [lemmatize_tokens(tokens_lst) for tokens_lst in topic_analysis_docs]
-#     dictionary = corpora.Dictionary(texts)
-#     dictionary.filter_extremes(no_below=20, no_above=0.5)
-#     corpus = [dictionary.doc2bow(text, allow_update=True) for text in texts]
+    texts = [lemmatize_tokens(tokens_lst) for tokens_lst in topic_analysis_docs]
+    dictionary = corpora.Dictionary(texts)
+    dictionary.filter_extremes(no_below=10, no_above=0.75) #keep_n = 100
+    corpus = [dictionary.doc2bow(text, allow_update=True) for text in texts]
 
-#     print("Done preprocessing the text. Finding topics...")
+    print("Done preprocessing the text. Finding topics...")
 
-#     # Set training parameters.
-#     num_topics = 10
-#     chunksize = 2000
+    # Set training parameters.
+    num_topics = 10
+    chunksize = 2000
     
-#     passes = 20
-#     iterations = 400
+    passes = 20
+    iterations = 400
 
-#     start_time = time.perf_counter()
-#     model = models.LdaModel(
-#         corpus=corpus,
-#         id2word=dictionary,
-#         chunksize=chunksize,
-#         alpha='auto',
-#         eta='auto',
-#         iterations=iterations,
-#         num_topics=num_topics,
-#         passes=passes,
-#     )
-#     end_time = time.perf_counter()
+    start_time = time.perf_counter()
+    model = models.LdaModel(
+        corpus=corpus,
+        id2word=dictionary,
+        chunksize=chunksize,
+        alpha='auto',
+        eta='auto',
+        iterations=iterations,
+        num_topics=num_topics,
+        passes=passes,
+    )
+    end_time = time.perf_counter()
 
-#     print(model.print_topics(10))
-#     print(f"Took {end_time - start_time:0.2f} seconds")
+    print(model.print_topics(10))
+    print(f"Took {end_time - start_time:0.2f} seconds")
     
-# #Testing topic modelling - prints out output
-# print('Female actors')
-# gensim_topic_model(0)
-# print('Male actors')
-# gensim_topic_model(1)
+#Testing topic modelling - prints out output
+print('Female actors')
+gensim_topic_model(0)
+print('Male actors')
+gensim_topic_model(1)
     
 #Entity Recognizer with spaCy
 def dependent_adjectives(actor_gender):
@@ -241,18 +241,18 @@ def get_keywords_new(actor_adj_list, document, corpus, adj_count):
     return term_and_tfidf
 
     
-female_adj_tfidf = {}
-for person in actor_list:
-    if person.gender == 0:
-        actor_adj_list = female_adjectives[person.title]
-        counter = Counter(actor_adj_list)
-        keywords = get_keywords_new(actor_adj_list, person.spacy_object, all_spacy_docs, counter)
-        # Sorting the dictionary based on highest to lowest tfidf values
-        sorted_keywords = sorted(keywords.items(), key=lambda x: x[1], reverse=True)
-        female_adj_tfidf[person.title] = sorted_keywords
-        break
+# female_adj_tfidf = {}
+# for person in actor_list:
+#     if person.gender == 0:
+#         actor_adj_list = female_adjectives[person.title]
+#         counter = Counter(actor_adj_list)
+#         keywords = get_keywords_new(actor_adj_list, person.spacy_object, all_spacy_docs, counter)
+#         # Sorting the dictionary based on highest to lowest tfidf values
+#         sorted_keywords = sorted(keywords.items(), key=lambda x: x[1], reverse=True)
+#         female_adj_tfidf[person.title] = sorted_keywords
+#         break
 
-print(female_adj_tfidf)
+#print(female_adj_tfidf)
         
 
 
