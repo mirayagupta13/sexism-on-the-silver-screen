@@ -53,11 +53,14 @@ a_list = [("Julie Andrews", 0), ( "Lauren Bacall", 0), ("Amitabh Bachchan", 1),
 ("James Stewart", 1), ("Meryl Streep", 0), ("Elizabeth Taylor", 0), ("Shirley Temple", 0),
 ("Spencer Tracy", 1), ("Rudolph Valentino", 1), ("John Wayne", 1), ("Mae West", 0)]
 
+list_of_names = [tup[0] for tup in a_list]
+all_names = ''.join(list_of_names)
+
 #creating an actor object for each article
 all_actor_names = [a_tup[0] for a_tup in a_list]
 actor_list = []
 
-i = 0
+#i = 0
 for item in directory.iterdir():
     if item.is_file():
         with item.open(encoding="utf8") as f:
@@ -69,16 +72,18 @@ for item in directory.iterdir():
 
             
             #Filtering out stopwords
-            STOPWORDS = {'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', 'should', 'now'}
+            STOPWORDS = {'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'also', 'first', 'role', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', 'should', 'now'}
 
             nltk_o = nltk.word_tokenize(content)
-            nltk_o = [word for word in nltk_o if word.lower() not in STOPWORDS]
-            nltk_o = [word for word in nltk_o if '=' not in word]
-            actor_list.append(actor(a_name, a_gender, content, spacy_o, nltk_o))
+            nltk_1 = [word for word in nltk_o if word.lower() not in STOPWORDS]
+            nltk_2 = [word for word in nltk_1 if '=' not in word]
+            nltk_3 = [word for word in nltk_2 if word.isalnum()]
+            nltk_4 = [word for word in nltk_3 if word not in all_names]
+            actor_list.append(actor(a_name, a_gender, content, spacy_o, nltk_4))
             #remove this after testing
-            i += 1
-            if i == 10:
-                break
+#             i += 1
+#             if i == 3:
+#                 break
 
 #test
 print(actor_list[0].title)
@@ -101,53 +106,56 @@ print(actor_list[0].gender)
 # pp.pprint(male_scores)
 
 #GENSIM TOPIC ANALYSIS
-def gensim_topic_model(actor_gender):
-    from gensim import models, corpora
-    from nltk.stem.wordnet import WordNetLemmatizer
-    import time
-
-    topic_analysis_docs = [person.tokens for person in actor_list if person.gender == actor_gender]
-
-    lemmatizer = WordNetLemmatizer()
-    def lemmatize_tokens(tokens): 
-        return [lemmatizer.lemmatize(token) for token in tokens]
-
-    texts = [lemmatize_tokens(tokens_lst) for tokens_lst in topic_analysis_docs]
-    dictionary = corpora.Dictionary(texts)
-    dictionary.filter_extremes(no_below=10, no_above=0.75) #keep_n = 100
-    corpus = [dictionary.doc2bow(text, allow_update=True) for text in texts]
-
-    print("Done preprocessing the text. Finding topics...")
-
-    # Set training parameters.
-    num_topics = 10
-    chunksize = 2000
-    
-    passes = 20
-    iterations = 400
-
-    start_time = time.perf_counter()
-    model = models.LdaModel(
-        corpus=corpus,
-        id2word=dictionary,
-        chunksize=chunksize,
-        alpha='auto',
-        eta='auto',
-        iterations=iterations,
-        num_topics=num_topics,
-        passes=passes,
-    )
-    end_time = time.perf_counter()
-
-    print(model.print_topics(10))
-    print(f"Took {end_time - start_time:0.2f} seconds")
-    
-#Testing topic modelling - prints out output
-print('Female actors')
-gensim_topic_model(0)
-print('Male actors')
-gensim_topic_model(1)
-    
+# def gensim_topic_model(actor_gender):
+#     from gensim import models, corpora
+#     from nltk.stem.wordnet import WordNetLemmatizer
+#     import time
+#     
+#     
+# 
+#     topic_analysis_docs = [person.tokens for person in actor_list if person.gender == actor_gender]
+#     
+# 
+#     lemmatizer = WordNetLemmatizer()
+#     def lemmatize_tokens(tokens): 
+#         return [lemmatizer.lemmatize(token) for token in tokens]
+# 
+#     texts = [lemmatize_tokens(tokens_lst) for tokens_lst in topic_analysis_docs]
+#     dictionary = corpora.Dictionary(texts)
+#     dictionary.filter_extremes(no_below=5, no_above=0.8) #keep_n = 100
+#     corpus = [dictionary.doc2bow(text, allow_update=True) for text in texts]
+# 
+#     print("Done preprocessing the text. Finding topics...")
+# 
+#     # Set training parameters.
+#     num_topics = 10
+#     chunksize = 2000
+#     
+#     passes = 20
+#     iterations = 400
+# 
+#     start_time = time.perf_counter()
+#     model = models.LdaModel(
+#         corpus=corpus,
+#         id2word=dictionary,
+#         chunksize=chunksize,
+#         alpha='auto',
+#         eta='auto',
+#         iterations=iterations,
+#         num_topics=num_topics,
+#         passes=passes,
+#     )
+#     end_time = time.perf_counter()
+# 
+#     print(model.print_topics(10))
+#     print(f"Took {end_time - start_time:0.2f} seconds")
+#     
+# #Testing topic modelling - prints out output
+# print('Female actors')
+# gensim_topic_model(0)
+# print('Male actors')
+# gensim_topic_model(1)
+#     
 #Entity Recognizer with spaCy
 def dependent_adjectives(actor_gender):
     adjectives = {}
@@ -241,18 +249,21 @@ def get_keywords_new(actor_adj_list, document, corpus, adj_count):
     return term_and_tfidf
 
     
-# female_adj_tfidf = {}
-# for person in actor_list:
-#     if person.gender == 0:
-#         actor_adj_list = female_adjectives[person.title]
-#         counter = Counter(actor_adj_list)
-#         keywords = get_keywords_new(actor_adj_list, person.spacy_object, all_spacy_docs, counter)
-#         # Sorting the dictionary based on highest to lowest tfidf values
-#         sorted_keywords = sorted(keywords.items(), key=lambda x: x[1], reverse=True)
-#         female_adj_tfidf[person.title] = sorted_keywords
-#         break
+female_adj_tfidf = {}
+for person in actor_list:
+    if person.gender == 0:
+        actor_adj_list = female_adjectives[person.title]
+        counter = Counter(actor_adj_list)
+        keywords = get_keywords_new(actor_adj_list, person.spacy_object, all_spacy_docs, counter)
+        # Sorting the dictionary based on highest to lowest tfidf values
+        sorted_keywords = sorted(keywords.items(), key=lambda x: x[1], reverse=True)
+        female_adj_tfidf[person.title] = sorted_keywords
 
-#print(female_adj_tfidf)
+
+print(female_adj_tfidf)
         
+#=======
+# print(female_adj_tfidf)  
+# >>>>>>> 725864b8d0c6ae343c1b023c49b53fda001b0cb4
 
 
